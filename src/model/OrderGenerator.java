@@ -1,15 +1,18 @@
 package model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.Callable;
+import java.util.*;
 
 import static model.EnumPosition.randomPosition;
 
-public class OrderGenerator implements Callable<Order> {
+public class OrderGenerator implements Runnable {
 
+    private int id = 1;
     Random random = new Random();
+    Queue<Order> orderQueue;
+
+    public OrderGenerator(Queue<Order> oq) {
+        orderQueue = oq;
+    }
 
     public Position generatePosition() {
         EnumPosition enumPosition = randomPosition();
@@ -24,7 +27,7 @@ public class OrderGenerator implements Callable<Order> {
     }
 
     public Order generateOrder() {
-        int id = 1;
+
         Order order = new Order();
         List<Position> positions = new ArrayList<>();
         int quantityOfPositions = random.nextInt(9+1);
@@ -34,6 +37,7 @@ public class OrderGenerator implements Callable<Order> {
         }
 
         int fullTime = 0;
+
         for(Position position : positions) {
             fullTime = fullTime + position.getTime();
         }
@@ -46,9 +50,16 @@ public class OrderGenerator implements Callable<Order> {
     }
 
     @Override
-    public Order call() throws InterruptedException {
-        Thread.sleep(5000);
-        Order order = generateOrder();
-        return order;
+    public void run() {
+        while (!Thread.interrupted()) {
+            Order order = generateOrder();
+            orderQueue.add(order);
+            System.out.println("Поступил заказ " + order.getId() + " " + order.getPositions());
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
