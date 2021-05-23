@@ -2,7 +2,7 @@ package model;
 
 import java.util.Queue;
 
-public class Worker implements Runnable {
+public class Worker implements Runnable, Comparable<Worker> {
 
     private static int count = 1;
     private final int id = count++;
@@ -10,6 +10,7 @@ public class Worker implements Runnable {
     private long workTime = 0;
     private Queue<Order> orderQueue;
     private boolean servingOrderQueue = true;
+    private Order order;
 
     public Worker(Queue<Order> oq) {
         orderQueue = oq;
@@ -33,37 +34,38 @@ public class Worker implements Runnable {
         this.workTime = workTime;
     }
 
+    public void results() {
+        System.out.println("Выполненные заказы " + servedOrders + " Время работы" + workTime);
+    }
+
     @Override
     public void run(){
         while(!Thread.interrupted()) {
-            Order order = orderQueue.poll();
+            order = orderQueue.element();
+            orderQueue.poll();
             try {
                 Thread.sleep(order.getFullTime());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             System.out.println("Заказ номер " + order.getId() + " выполнен");
-            synchronized (this) {
-                servedOrders++;
-                workTime += order.getFullTime();
-                System.out.println("Выполненные заказы " + servedOrders + " Время работы" + workTime);
-                while (!servingOrderQueue){
-                    try {
-                        wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+            servedOrders++;
+            workTime += order.getFullTime();
+            order = null;
         }
     }
 
     public synchronized void doSomethingElse() {
+        servedOrders = 0;
         servingOrderQueue = false;
     }
 
     public synchronized void serveOrderLine() {
         servingOrderQueue = true;
         notifyAll();
+    }
+
+    public synchronized int compareTo(Worker worker) {
+        return Long.compare(servedOrders, worker.servedOrders);
     }
 }

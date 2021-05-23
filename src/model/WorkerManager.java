@@ -1,6 +1,7 @@
 package model;
 
 import java.util.LinkedList;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 
@@ -8,16 +9,12 @@ public class WorkerManager implements Runnable {
 
     private ExecutorService exec;
     private Queue<Order> orderQueue;
-    private Queue<Worker> workersOnWork = new LinkedList<>();
+    private PriorityQueue<Worker> workersOnWork = new PriorityQueue<>();
     private Queue<Worker> workersOnRest = new LinkedList<>();
 
-    public WorkerManager(ExecutorService e, Queue<Order> oq) {
-        exec = e;
-        orderQueue = oq;
-
-        Worker worker = new Worker(orderQueue);
-        exec.execute(worker);
-        workersOnWork.add(worker);
+    public WorkerManager(ExecutorService exec, Queue<Order> orderQueue) {
+        this.exec = exec;
+        this.orderQueue = orderQueue;
     }
 
     public void adjustWorkerNumber() {
@@ -53,8 +50,16 @@ public class WorkerManager implements Runnable {
     }
 
     public void run() {
-        adjustWorkerNumber();
-        for(Worker worker : workersOnWork)
-            System.out.println(worker.getId() + " Работает");
+        Worker worker = new Worker(orderQueue);
+        exec.execute(worker);
+        workersOnWork.add(worker);
+        while(!Thread.interrupted()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            adjustWorkerNumber();
+        }
     }
 }

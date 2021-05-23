@@ -6,12 +6,6 @@ public class Position {
     private int quantity;
     private int time;
 
-    public Position(String name, int quantity, int time) {
-        this.name = name;
-        this.quantity = quantity;
-        this.time = time;
-    }
-
     public Position() {
     }
 
