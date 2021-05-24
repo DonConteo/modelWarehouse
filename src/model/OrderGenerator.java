@@ -9,6 +9,7 @@ public class OrderGenerator implements Runnable {
     private int id = 1;
     Random random = new Random();
     Queue<Order> orderQueue;
+    public static volatile boolean canceled = false;
 
     public OrderGenerator(Queue<Order> oq) {
         orderQueue = oq;
@@ -49,9 +50,13 @@ public class OrderGenerator implements Runnable {
         return order;
     }
 
+    public static void cancel() {
+        canceled = true;
+    }
+
     @Override
     public void run() {
-        while (!Thread.interrupted()) {
+        while (!canceled) {
             Order order = generateOrder();
             orderQueue.add(order);
             System.out.println("Поступил заказ " + order.getId() + " " + order.getPositions());

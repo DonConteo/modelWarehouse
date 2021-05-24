@@ -7,6 +7,7 @@ import java.util.Queue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class WarehouseModel {
 
@@ -17,5 +18,8 @@ public class WarehouseModel {
         exec.execute(new OrderGenerator(orderQueue));
         Thread.sleep(10000);
         exec.execute(new WorkerManager(exec, orderQueue));
+        TimeUnit.SECONDS.sleep(30);
+        OrderGenerator.cancel();
+        exec.shutdown();
     }
 }
